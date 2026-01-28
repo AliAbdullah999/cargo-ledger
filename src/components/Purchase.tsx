@@ -1,21 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Field, useFormikContext } from 'formik';
-import type { Money, Weight } from '../domain/types';
+import type { Money, Weight, Currency, WeightUnit } from '../domain/types';
 import { calculateWholePurchaseValue } from '../domain/calculations';
 import { commafy, addValueToArr, removeValueFromArr } from '../utils/settings';
 import NumericField from './NumericField';
 
 
 type PurchaseProps = {
-    purchaseValue: Money;
-    netWeight: Weight;
+    currency?: Currency;
+    weightUnit?: WeightUnit;
 };
 
 type FormValues = {
-    addProductVisible: boolean;
-    addSellerVisible: boolean;
     purchaseNote: string;
     purchaseValue: number;
+    netWeight: number;
     productType: string;
     sellerName: string;
     sellerType: string;
@@ -23,73 +22,81 @@ type FormValues = {
     newSellerType?: string;
 };
 
-function Purchase({ purchaseValue, netWeight }: PurchaseProps) {
-    const { values } = useFormikContext<FormValues>();
+// The goal is to calculate that we bought from this seller and Selled to a Buyer, that's why we call this
+// section Purchase(خرید)
+function Purchase({ currency = 'IRR', weightUnit = 'ton' }: PurchaseProps) {
+    const { values, setFieldValue } = useFormikContext<FormValues>();
     const [productTypes, setProductTypes] = useState(['کلید', 'پوشالی', 'محلی'])
     const [sellerTypes, setSellerTypes] = useState(['مرغداری', 'اقای', 'شرکت'])
 
+
+
     const wholePurchaseValue = useMemo(() => {
-        return calculateWholePurchaseValue(purchaseValue, netWeight)
-    }, [purchaseValue, netWeight])
+        const price: Money = {
+            amount: values.purchaseValue,
+            currency,
+        }
+
+        const weight: Weight = {
+            value: values.netWeight,
+            unit: weightUnit,
+        }
+
+        return calculateWholePurchaseValue(price, weight)
+    }, [values.purchaseValue, values.netWeight, currency, weightUnit])
+
+
     // settings
+    // Showing visible fields
+    const [showAddSeller, setShowAddSeller] = useState(false);
+    const [showAddProduct, setShowAddProduct] = useState(false);
+    // Functions
     const handleAddProduct = () => {
-        if (!values.addProductVisible) {
-            values.addProductVisible = true
-        }
-        else if (values.addProductVisible) {
-            if (values.newProductType == "") {
-                values.addProductVisible = false
-            }
-        }
-        else {
-            let newValue = values.newProductType;
-            let res = addValueToArr(productTypes, newValue);
-            setProductTypes(res);
-            values.newProductType = ""
-        }
-    }
+        if (!showAddProduct) return setShowAddProduct(true);
+
+
+        if (!values.newProductType?.trim()) return setShowAddProduct(false);
+
+        setProductTypes(prev =>
+            addValueToArr(prev, values.newProductType!)
+        );
+
+        setFieldValue('newProductType', '');
+        setFieldValue('addProductVisible', false);
+    };
 
     const handleDeleteProductType = () => {
-        let valueToDelete = values.productType;
-        let res = removeValueFromArr(productTypes, valueToDelete);
-        setProductTypes(res);
-    }
-
-    const handleDeleteSellerType = () => {
-        let valueToDelete = values.sellerType;
-        let res = removeValueFromArr(sellerTypes, valueToDelete);
-        setSellerTypes(res);
-    }
+        setProductTypes(removeValueFromArr(productTypes, values.productType));
+    };
 
     const handleAddSeller = () => {
-        if (!values.addSellerVisible) {
-            values.addSellerVisible = true
-        }
-        else if (values.addSellerVisible) {
-            if (values.newSellerType == "") {
-                values.addSellerVisible = false
-            }
-        }
-        else {
-            let newValue = values.newSellerType;
-            let res = addValueToArr(sellerTypes, newValue);
-            setSellerTypes(res);
-            values.newSellerType = "";
-        }
-    }
+        if (!showAddSeller) return setShowAddSeller(true);
+
+        if (!values.newSellerType?.trim()) return setShowAddSeller(false);
+
+        setSellerTypes(prev => addValueToArr(prev, values.newSellerType));
+        setFieldValue('newSellerType', '');
+        setShowAddSeller(false);
+    };
+
+    const handleDeleteSellerType = () => {
+        setSellerTypes(removeValueFromArr(sellerTypes, values.sellerType));
+    };
+
 
     return (
         <>
-            <div className="container p-0 col-md-12">
+            <div className="container-fluid p-0 col-md-12">
                 {/* Section Badge */}
-                <div className="p-1 w-25">
-                    <h1 className="fs-5 badge bg-info text-wrap">خرید</h1>
+                <div className="col-md p-1 text-end">
+                    <h1 className="fs-5 badge bg-info text-wrap ">خرید</h1>
                 </div>
-                <div className="col-md-12 border border-5 shadow-lg p-1 bg-light">
+
+                <div className="col-md-12 border border-5 shadow-lg p-1 bg-body">
                     <div className="row text-start">
 
                         {/* Purchase Note */}
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <fieldset className="form-group text-end">
                                 <label htmlFor="purchaseNote">:توضیحات</label>
                                 <Field
@@ -102,7 +109,7 @@ function Purchase({ purchaseValue, netWeight }: PurchaseProps) {
 
                         {/* Whole Purchase Value */}
                         <div className="col-md-2">
-                            <div className="border-4 border border-success mt-2 p-1">
+                            <div className="border-4 border border-success mt-2 p-1 bg-success-subtle">
                                 <fieldset className="form-group text-end">
                                     <label className="text-success">:مبلغ کل خرید</label>
                                     <h4 className="text-success text-center">
@@ -113,10 +120,14 @@ function Purchase({ purchaseValue, netWeight }: PurchaseProps) {
                         </div>
 
                         {/* Purchase Price */}
-                        <div className="col-md-1">
+                        <div className="col-md-2">
                             <fieldset className="form-group text-end">
-                                <label htmlFor="purchaseValue">:قیمت خرید</label>
+                                <label htmlFor="purchaseValue">:قيمت خريد</label>
                                 <NumericField name="purchaseValue" />
+                            </fieldset>
+                            <fieldset className="form-group text-end">
+                                <label htmlFor="purchaseValue">:وزن خالص</label>
+                                <NumericField name="netWeight" />
                             </fieldset>
                         </div>
 
@@ -124,12 +135,13 @@ function Purchase({ purchaseValue, netWeight }: PurchaseProps) {
                         <div className="col-md-2">
                             <fieldset className="form-group text-end">
                                 <label htmlFor="productType">:نوع کالا</label>
+
                                 <Field
                                     as="select"
                                     className="form-control text-end"
                                     name="productType"
                                 >
-                                    {productTypes.map((e) => (
+                                    {productTypes.map(e => (
                                         <option key={e} value={e}>
                                             {e}
                                         </option>
@@ -151,13 +163,25 @@ function Purchase({ purchaseValue, netWeight }: PurchaseProps) {
                                 >
                                     افزایش
                                 </button>
+
+                                {showAddProduct && (
+                                    <div className="mt-2">
+                                        <label htmlFor="newProductType">:اضافه به نوع کالا</label>
+                                        <Field
+                                            type="text"
+                                            className="form-control text-end"
+                                            name="newProductType"
+                                        />
+                                    </div>
+                                )}
                             </fieldset>
                         </div>
+
 
                         {/* Seller Name */}
                         <div className="col-md-2">
                             <fieldset className="form-group text-end">
-                                <label htmlFor="sellerName">:اسم مشتری</label>
+                                <label htmlFor="sellerName">:اسم فروشنده</label>
                                 <Field
                                     className="form-control text-end"
                                     type="text"
@@ -169,7 +193,7 @@ function Purchase({ purchaseValue, netWeight }: PurchaseProps) {
                         {/* Seller Type */}
                         <div className="col-md-2">
                             <fieldset className="form-group text-end">
-                                <label htmlFor="sellerType">:نوع مشتری</label>
+                                <label htmlFor="sellerType">:نوع فروشنده</label>
                                 <Field
                                     as="select"
                                     className="form-control text-end"
@@ -197,38 +221,21 @@ function Purchase({ purchaseValue, netWeight }: PurchaseProps) {
                                 >
                                     افزایش
                                 </button>
+
+                                {showAddSeller && (
+                                    <div className="mt-2">
+                                        <label htmlFor="newSellerType">:اضافه به نوع فروشنده</label>
+                                        <Field
+                                            type="text"
+                                            className="form-control text-end"
+                                            name="newSellerType"
+                                        />
+                                    </div>
+                                )}
                             </fieldset>
                         </div>
                     </div>
 
-                    {/* Conditional Fields */}
-                    <div className="row text-start">
-                        {values.addProductVisible && (
-                            <div className="col-md">
-                                <fieldset className="form-group text-end">
-                                    <label htmlFor="newProductType">:اضافه به نوع کالا</label>
-                                    <Field
-                                        type="text"
-                                        className="form-control text-end"
-                                        name="newProductType"
-                                    />
-                                </fieldset>
-                            </div>
-                        )}
-
-                        {values.addSellerVisible && (
-                            <div className="col-md">
-                                <fieldset className="form-group text-end">
-                                    <label htmlFor="newSellerType">:اضافه به نوع مشتری</label>
-                                    <Field
-                                        type="text"
-                                        className="form-control text-end"
-                                        name="newSellerType"
-                                    />
-                                </fieldset>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
         </>

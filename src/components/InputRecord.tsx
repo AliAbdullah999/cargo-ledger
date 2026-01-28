@@ -1,38 +1,30 @@
-import { Formik } from 'formik'
-import Purchase from './Purchase'
-import type { Money, Weight } from '../domain/types'
+import { Formik } from 'formik';
+import type { Currency, WeightUnit } from '../domain/types';
+import Purchase from './Purchase';
 
-const initialPurchaseValue: Money = {
-    amount: 0,
-    currency: 'IRR',
-}
-
-const initialNetWeight: Weight = {
-    value: 0,
-    unit: 'kg',
-}
+// configuration (app-level / feature-level config)
+const currency: Currency = 'IRR';
+const weightUnit: WeightUnit = 'ton';
 
 function InputRecord() {
     return (
         <Formik
             initialValues={{
-                // purchase
                 purchaseNote: '',
                 purchaseValue: 0,
+                netWeight: 0,
                 productType: '',
                 sellerName: '',
                 sellerType: '',
                 newProductType: '',
                 newSellerType: '',
             }}
-            onSubmit={() => { }}
+            onSubmit={() => {}}
         >
-            <Purchase
-                purchaseValue={initialPurchaseValue}
-                netWeight={initialNetWeight}
-            />
+            {/* Pass configuration via props */}
+            <Purchase currency={currency} weightUnit={weightUnit} />
         </Formik>
-    )
+    );
 }
 
-export default InputRecord
+export default InputRecord;
