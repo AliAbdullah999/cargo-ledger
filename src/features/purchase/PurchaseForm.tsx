@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Field, useFormikContext } from 'formik';
-import type { Money, Weight, Currency, WeightUnit } from '../domain/types';
-import { calculateWholePurchaseValue } from '../domain/calculations';
-import { commafy, addValueToArr, removeValueFromArr } from '../utils/settings';
-import NumericField from './NumericField';
+import type { Money, Weight, Currency, WeightUnit } from '../../domain/types';
+import { calculateWholePurchaseValue } from '../../domain/calculations';
+import { commafy, addValueToArr, removeValueFromArr } from '../../shared/utils/settings';
+import NumericField from '../../shared/components/NumericField';
 
 
 type PurchaseProps = {
@@ -24,7 +24,7 @@ type FormValues = {
 
 // The goal is to calculate that we bought from this seller and Selled to a Buyer, that's why we call this
 // section Purchase(خرید)
-function Purchase({ currency = 'IRR', weightUnit = 'ton' }: PurchaseProps) {
+function PurchaseForm({ currency = 'IRR', weightUnit = 'ton' }: PurchaseProps) {
     const { values, setFieldValue } = useFormikContext<FormValues>();
     const [productTypes, setProductTypes] = useState(['کلید', 'پوشالی', 'محلی'])
     const [sellerTypes, setSellerTypes] = useState(['مرغداری', 'اقای', 'شرکت'])
@@ -242,4 +242,4 @@ function Purchase({ currency = 'IRR', weightUnit = 'ton' }: PurchaseProps) {
     );
 }
 
-export default Purchase;
+export default PurchaseForm;

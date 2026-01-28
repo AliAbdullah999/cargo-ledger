@@ -1,6 +1,6 @@
 import { Formik } from 'formik';
 import type { Currency, WeightUnit } from '../domain/types';
-import Purchase from './Purchase';
+import Purchase from '../features/purchase/PurchaseForm';
 
 // configuration (app-level / feature-level config)
 const currency: Currency = 'IRR';

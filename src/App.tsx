@@ -1,4 +1,4 @@
-import InputRecord from "./components/InputRecord"
+import InputRecord from "./app/InputRecord"
 function App() {
   const toggleTheme = () => {
     const html = document.documentElement;
