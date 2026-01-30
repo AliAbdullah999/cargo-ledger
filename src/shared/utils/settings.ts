@@ -19,8 +19,8 @@ export const removeValueFromArr = (arr: Array<any>, value: any) => {
 	return tmpArr;
 }
 
-export function commafy(num: number | string): string {
-  return num
-    .toString()
-    .replace(/(\d)(?=(\d{3})+$)/g, '$1,')
-}
+export const commafy = (value: number | string) => {
+  const num = Number(value);
+  if (isNaN(num)) return "0";
+  return num.toLocaleString("en-US"); // Handles all scales (e.g., 1,000 → 1,000)
+};

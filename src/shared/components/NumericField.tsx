@@ -1,6 +1,5 @@
 import { NumericFormat } from 'react-number-format'
-import type { FieldProps} from 'formik'
-import { Field } from 'formik'
+import { useFormikContext } from 'formik'
 
 type NumericFieldProps = {
   name: string
@@ -8,18 +7,24 @@ type NumericFieldProps = {
 }
 
 const NumericField = ({ name, ...rest }: NumericFieldProps) => {
+  const { setFieldValue, values, handleBlur } = useFormikContext<any>()
+
+  const handleValueChange = (valuesObj: any) => {
+    const { floatValue } = valuesObj
+    setFieldValue(name, floatValue ?? 0)
+  }
+
   return (
-    <Field name={name}>
-      {({ field }: FieldProps<any>) => (
-        <NumericFormat
-          {...field}
-          {...rest}
-          className="form-control text-end"
-          thousandSeparator=","
-          allowLeadingZeros
-        />
-      )}
-    </Field>
+    <NumericFormat
+      {...rest}
+      name={name}
+      value={values[name] ?? ''}
+      className="form-control text-end"
+      thousandSeparator=","
+      allowLeadingZeros
+      onValueChange={handleValueChange}
+      onBlur={handleBlur}
+    />
   )
 }
 
