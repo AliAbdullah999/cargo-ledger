@@ -18,7 +18,7 @@ function InputRecord() {
             >
                 <div className="d-flex flex-column ms-1 vw-90 mb-1">
                     <PurchaseForm currency={currency} weightUnit={weightUnit} />
-                    <TransportForm />
+                    <TransportForm currency={currency} weightUnit={weightUnit}/>
                 </div>
             </Formik>
         </div>

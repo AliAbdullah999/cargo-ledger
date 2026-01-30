@@ -15,11 +15,40 @@ export type InputRecordFormValues = {
     vehicleNumber: string;
     emptyWeight: number;
     fullWeight: number;
-    shippOddCost: number;
-    scalingCost: number;
+    shippMiscCost: number;
+    weighingFee: number;
     tonsCount: number;
     fixedAmount: boolean;
-    inTons: boolean;
-    purchasedFrom: string;
-    loadTypeNote: string;
+    byWeightUnit: boolean;
+    payer: string;
+    newPayer: string;
+    transportNote: string;
 };
+
+export type PurchaseFormValues = Pick<
+  InputRecordFormValues,
+  | 'purchaseNote'
+  | 'purchaseValue'
+  | 'netWeight'
+  | 'productType'
+  | 'sellerName'
+  | 'sellerType'
+  | 'newProductType'
+  | 'newSellerType'
+>;
+
+export type TransportFormValues = Pick<
+  InputRecordFormValues,
+  | 'driverName'
+  | 'vehicleNumber'
+  | 'emptyWeight'
+  | 'fullWeight'
+  | 'shippMiscCost'
+  | 'weighingFee'
+  | 'tonsCount'
+  | 'fixedAmount'
+  | 'byWeightUnit'
+  | 'payer'
+  | 'newPayer'
+  | 'transportNote'
+>;
