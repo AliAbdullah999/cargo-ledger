@@ -18,7 +18,7 @@ const NumericField = ({ name, ...rest }: NumericFieldProps) => {
     <NumericFormat
       {...rest}
       name={name}
-      value={values[name] ?? ''}
+      value={values[name]}
       className="form-control text-end"
       thousandSeparator=","
       allowLeadingZeros

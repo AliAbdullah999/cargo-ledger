@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Field, useFormikContext } from 'formik';
 import type { Money, Weight, Currency, WeightUnit } from '../../domain/types';
-import { calculateWholePurchaseValue } from '../../domain/calculations';
+import { calculateWholePurchaseValue } from '../../domain/pricing/pricing.calculations';
 import { commafy, addValueToArr, removeValueFromArr } from '../../shared/utils/settings';
 import NumericField from '../../shared/components/NumericField';
 import type { InputRecordFormValues } from '../inputRecord/inputRecord.types';

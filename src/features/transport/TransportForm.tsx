@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Field, useFormikContext } from 'formik';
+import { Field, FormikValues, useFormikContext } from 'formik';
 import NumericField from '../../shared/components/NumericField';
 import { commafy, addValueToArr, removeValueFromArr, } from '../../shared/utils/settings';
-import type { Currency, WeightUnit } from '../../domain/types';
+import type { Currency, WeightUnit, Weight, Money } from '../../domain/types';
 import type { InputRecordFormValues } from '../inputRecord/inputRecord.types';
+import { calculateNetWeight } from '../../domain/pricing';
+import { calculateShippingCost } from '../../domain/pricing';
 
 type TransportProps = {
     currency: Currency;
@@ -12,12 +14,18 @@ type TransportProps = {
 
 const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps) => {
     const { values, setFieldValue } = useFormikContext<InputRecordFormValues>();
+    
 
     //  State
 
     const [payers, setPayers] = useState(['فروشنده', 'خریدار', 'صندوق']);
     const [showAddPayer, setShowAddPayer] = useState(false);
     const [hideNetWeightWarning, setHideNetWeightWarning] = useState(false);
+
+    const isMeasured =
+        values.fullWeight > 0 &&
+        values.emptyWeight > 0 &&
+        values.fullWeight > values.emptyWeight;
 
     // Event Handlers 
 
@@ -49,35 +57,55 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
     // Derived Values 
 
     const netWeight = useMemo(() => {
-        const full = values.fullWeight || 0;
-        const empty = values.emptyWeight || 0;
-        return full - empty;
+        const full: Weight = {
+            value: values.fullWeight,
+            unit: weightUnit,
+        };
+
+        const empty: Weight = {
+            value: values.emptyWeight,
+            unit: weightUnit,
+        };
+
+        return calculateNetWeight(full, empty).value;
     }, [values.fullWeight, values.emptyWeight]);
 
     const wholeShippingCost = useMemo(() => {
-        const tonsCount = values.tonsCount || 0;
-        const weighingFee = values.weighingFee || 0;
-        const shippMiscCost = values.shippMiscCost || 0;
+        const quantity = values.quantity;
 
-        let total = values.byWeightUnit
-            ? tonsCount * netWeight
-            : tonsCount;
+        const shippMiscCost: Money = {
+            amount: values.shippMiscCost,
+            currency,
+        };
 
-        total += weighingFee + shippMiscCost;
+        const weighingFee: Money = {
+            amount: values.weighingFee,
+            currency,
+        };
 
-        return total;
+        const net: Weight = {
+            value: netWeight,
+            unit: weightUnit,
+        };
+
+        return calculateShippingCost({
+            quantity,
+            net,
+            weighingFee,
+            shippMiscCost,
+            pricingMode: values.byWeightUnit
+                ? 'PER_WEIGHT'
+                : 'FLAT',
+        }).amount;
     }, [
         values.byWeightUnit,
-        values.tonsCount,
+        values.quantity,
         values.weighingFee,
         values.shippMiscCost,
         netWeight,
     ]);
 
-    const isMeasured =
-        values.fullWeight > 0 &&
-        values.emptyWeight > 0 &&
-        values.fullWeight > values.emptyWeight;
+
 
     // Effects 
 
@@ -260,7 +288,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
                                     ? ':وزنى'
                                     : ':دربستی'}
                             </label>
-                            <NumericField name="tonsCount" />
+                            <NumericField name="quantity" />
                         </fieldset>
                     </div>
 

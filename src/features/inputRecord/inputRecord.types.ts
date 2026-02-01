@@ -17,7 +17,7 @@ export type InputRecordFormValues = {
     fullWeight: number;
     shippMiscCost: number;
     weighingFee: number;
-    tonsCount: number;
+    quantity: number;
     fixedAmount: boolean;
     byWeightUnit: boolean;
     payer: string;
@@ -45,7 +45,7 @@ export type TransportFormValues = Pick<
   | 'fullWeight'
   | 'shippMiscCost'
   | 'weighingFee'
-  | 'tonsCount'
+  | 'quantity'
   | 'fixedAmount'
   | 'byWeightUnit'
   | 'payer'

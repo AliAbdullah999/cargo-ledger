@@ -20,7 +20,7 @@ export const initialValues: InputRecordFormValues = {
     fullWeight: 0,
     shippMiscCost: 0,
     weighingFee: 0,
-    tonsCount: 0,
+    quantity: 0,
     fixedAmount: false,
     byWeightUnit: false,
     payer: 'فروشنده',
