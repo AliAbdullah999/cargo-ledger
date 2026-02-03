@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Field, FormikValues, useFormikContext } from 'formik';
+import { Field, useFormikContext } from 'formik';
 import NumericField from '../../shared/components/NumericField';
 import { commafy, addValueToArr, removeValueFromArr, } from '../../shared/utils/settings';
 import type { Currency, WeightUnit, Weight, Money } from '../../domain/types';
 import type { InputRecordFormValues } from '../inputRecord/inputRecord.types';
 import { calculateNetWeight } from '../../domain/pricing';
 import { calculateShippingCost } from '../../domain/pricing';
+import { DomainValidationError } from '../../domain/domainErrors';
+import { FieldError } from '../../shared/components/FieldError'
 
 type TransportProps = {
     currency: Currency;
@@ -13,8 +15,15 @@ type TransportProps = {
 };
 
 const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps) => {
-    const { values, setFieldValue } = useFormikContext<InputRecordFormValues>();
-    
+    const { values, setFieldValue, setErrors, errors } = useFormikContext<InputRecordFormValues>();
+    const { status, setStatus } = useFormikContext<InputRecordFormValues>();
+
+    const formik = useFormikContext<InputRecordFormValues>();
+
+    useEffect(() => {
+        console.log('Formik errors:', formik.errors);
+    }, [formik.errors]);
+
 
     //  State
 
@@ -57,6 +66,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
     // Derived Values 
 
     const netWeight = useMemo(() => {
+
         const full: Weight = {
             value: values.fullWeight,
             unit: weightUnit,
@@ -67,8 +77,21 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
             unit: weightUnit,
         };
 
-        return calculateNetWeight(full, empty).value;
-    }, [values.fullWeight, values.emptyWeight]);
+        try {
+            console.log('net weight Calculated Succsefully');
+            return {
+                value: calculateNetWeight(full, empty).value,
+                error: null,
+            };
+        } catch (e) {
+            console.log('net weight error being returned');
+            return {
+                value: 0,
+                error: e instanceof Error ? e : null,
+            }
+        }
+
+    }, [values.fullWeight, values.emptyWeight, weightUnit]);
 
     const wholeShippingCost = useMemo(() => {
         const quantity = values.quantity;
@@ -84,7 +107,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
         };
 
         const net: Weight = {
-            value: netWeight,
+            value: netWeight.value,
             unit: weightUnit,
         };
 
@@ -111,7 +134,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
 
     // Override netWeight when measured
     useEffect(() => {
-        setFieldValue('netWeight', netWeight);
+        setFieldValue('netWeight', netWeight.value);
     }, [netWeight, setFieldValue]);
 
     // Reset warning visibility when measurement changes
@@ -121,6 +144,33 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
         }
     }, [values.fullWeight, values.emptyWeight, isMeasured]);
 
+    // Show net Weight calculation error
+
+    // In your useEffect:
+    useEffect(() => {
+        if (!netWeight.error) {
+            // Clear the error if it was previously set
+            if (errors.fullWeight || errors.emptyWeight) {
+                const newErrors = { ...errors };
+                delete newErrors.fullWeight;
+                delete newErrors.emptyWeight;
+                setErrors(newErrors);
+            }
+            return;
+        }
+
+        if (netWeight.error instanceof DomainValidationError) {
+            console.log('Domain Validation Error', netWeight.error.message);
+            setErrors({
+                ...errors,
+                [netWeight.error.field]: netWeight.error.message
+            });
+        } else {
+            console.log('Unexpected error calculating net weight');
+            setStatus('Unexpected error calculating net weight');
+        }
+    }, [netWeight.error, errors, setErrors, setStatus]);
+
 
     return (
         <div className="container-fluid p-0 col-md-12">
@@ -128,6 +178,12 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
             <div className="col-md p-1 text-end">
                 <h1 className="fs-5 badge bg-info text-wrap">حمل</h1>
             </div>
+
+            {status && (
+                <div className="alert alert-danger text-end my-2">
+                    {status}
+                </div>
+            )}
 
             <div className="col-md-13 border border-5 shadow-lg p-1 bg-body">
                 {/* --------------------------- First Row -------------------------------- */}
@@ -137,7 +193,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
                         <fieldset className="form-group text-end">
                             <label>:وزن خالص</label>
                             <h4>
-                                {commafy(netWeight)} {weightUnit}
+                                {commafy(netWeight.value)} {weightUnit}
                             </h4>
 
                             {isMeasured && !hideNetWeightWarning && (
@@ -163,7 +219,9 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
                         <fieldset className="form-group text-end">
                             <label>{weightUnit} :وزن خالی</label>
                             <NumericField name="emptyWeight" />
+                            <FieldError name="emptyWeight" />
                         </fieldset>
+
                     </div>
 
                     {/* Full Weight */}
@@ -171,6 +229,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
                         <fieldset className="form-group text-end">
                             <label>{weightUnit} :وزن پر</label>
                             <NumericField name="fullWeight" />
+                            <FieldError name="fullWeight" />
                         </fieldset>
                     </div>
 

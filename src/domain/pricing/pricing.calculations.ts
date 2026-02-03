@@ -1,6 +1,6 @@
 import type { Money, Weight } from '../types';
 import type { ShippingCostInput } from './pricing.types';
-import { assertSameWeightUnit } from './pricing.validators';
+import { assertFullExceedsEmpty, assertSameWeightUnit } from './pricing.validators';
 
 
 export function calculateWholePurchaseValue(
@@ -13,12 +13,9 @@ export function calculateNetWeight(
   full: Weight,
   empty: Weight
 ): Weight {
-  assertSameWeightUnit(full, empty);
 
-  if (empty.value > full.value) {
-    throw new Error('Empty weight cannot exceed full weight');
-  }
-
+  assertSameWeightUnit(full, empty, 'fullWeight');
+  assertFullExceedsEmpty(full, empty);
   return {
     value: full.value - empty.value,
     unit: full.unit,
