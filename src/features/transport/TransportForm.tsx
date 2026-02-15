@@ -146,7 +146,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
 
     // Show net Weight calculation error
 
-    // In your useEffect:
+    // If net weight is valid, clear any related errors
     useEffect(() => {
         if (!netWeight.error) {
             // Clear the error if it was previously set

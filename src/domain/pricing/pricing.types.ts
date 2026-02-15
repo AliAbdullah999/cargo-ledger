@@ -9,3 +9,11 @@ export type ShippingCostInput = {
   shippMiscCost: Money;
   pricingMode: PricingMode;
 };
+
+export type WholeWorkerCostInput = {
+  wage: Money;
+  workerMiscCost: Money;
+  tips: Money;
+  housingCost: Money;
+  feedingCost: Money;
+};

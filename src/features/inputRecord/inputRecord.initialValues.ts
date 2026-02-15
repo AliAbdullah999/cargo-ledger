@@ -26,4 +26,13 @@ export const initialValues: InputRecordFormValues = {
     payer: 'فروشنده',
     newPayer: '',
     transportNote: '',
+
+    // Worker
+    workerName: '',
+    workerType: '',
+    wage: 0,
+    workerMiscCost: 0,
+    tips: 0,
+    housingCost: 0,
+    feedingCost: 0,
 };

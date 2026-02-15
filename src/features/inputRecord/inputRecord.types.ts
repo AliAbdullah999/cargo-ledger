@@ -23,6 +23,17 @@ export type InputRecordFormValues = {
     payer: string;
     newPayer: string;
     transportNote: string;
+
+    // worker
+    workerName: string;
+    workerType: string;
+    wage: number;
+    workerMiscCost: number;
+    tips: number;
+    housingCost: number;
+    feedingCost: number;
+
+
 };
 
 export type PurchaseFormValues = Pick<
@@ -51,4 +62,15 @@ export type TransportFormValues = Pick<
   | 'payer'
   | 'newPayer'
   | 'transportNote'
+>;
+
+export type WorkerFormValues = Pick<
+  InputRecordFormValues,
+  | 'workerName'
+  | 'workerType'
+  | 'wage'
+  | 'workerMiscCost'
+  | 'tips'
+  | 'housingCost'
+  | 'feedingCost'
 >;
