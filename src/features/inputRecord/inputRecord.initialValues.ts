@@ -12,6 +12,7 @@ export const initialValues: InputRecordFormValues = {
     sellerType: '',
     newProductType: '',
     newSellerType: '',
+    wholePurchaseValue: { amount: 0, currency: 'IRR' },
 
     // Transport
     driverName: '',
@@ -26,13 +27,21 @@ export const initialValues: InputRecordFormValues = {
     payer: 'فروشنده',
     newPayer: '',
     transportNote: '',
+    wholeShippingCost: { amount: 0, currency: 'IRR' },
 
-    // Worker
-    workerName: '',
-    workerType: '',
+    // Labor
+    laborName: '',
+    laborType: '',
     wage: 0,
-    workerMiscCost: 0,
+    laborMiscCost: 0,
     tips: 0,
     housingCost: 0,
     feedingCost: 0,
+    wholeLaborCost: { amount: 0, currency: 'IRR' },
+
+    // Sell
+    customerName: '',
+    customerType: '',
+    pulloutCost: 0,
+    sellPrice: 0,
 };

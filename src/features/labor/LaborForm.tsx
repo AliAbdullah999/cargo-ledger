@@ -1,18 +1,18 @@
-import { use, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, } from 'react';
 import type { Currency, Money, WeightUnit } from "../../domain/types"
 import type { InputRecordFormValues } from '../inputRecord/inputRecord.types';
 import { Field, useFormikContext } from 'formik';
 import { commafy } from '../../shared/utils/settings';
 import NumericField from '../../shared/components/NumericField';
-import { calculateWholeWorkerCost } from '../../domain/pricing';
+import { calculateWholeLaborCost } from '../../domain/pricing';
 
-type WorkerProps = {
+type LaborProps = {
     currency: Currency,
     weightUnit: WeightUnit
 };
 
 
-const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
+const LaborForm = ({ currency = 'IRR'}: LaborProps) => {
 
     const { values, setFieldValue } = useFormikContext<InputRecordFormValues>();
 
@@ -26,9 +26,9 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
     }, [values.wage]);
 
 
-    const wholeWorkerCost = useMemo(() => {
-        const workerMisc: Money = {
-            amount: values.workerMiscCost,
+    const wholeLaborCost = useMemo(() => {
+        const laborMisc: Money = {
+            amount: values.laborMiscCost,
             currency
         };
 
@@ -47,14 +47,14 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
             currency
         };
 
-        return calculateWholeWorkerCost({
+        return calculateWholeLaborCost({
             wage: loadingCost,
-            workerMiscCost: workerMisc,
+            laborMiscCost: laborMisc,
             tips,
             housingCost,
             feedingCost
         });
-    }, [values.workerMiscCost,
+    }, [values.laborMiscCost,
     values.housingCost,
     values.tips,
     values.byWeightUnit,
@@ -69,8 +69,8 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
     }, [loadingCost]);
 
     useEffect(() => {
-        setFieldValue('wholeWorkerCost', wholeWorkerCost.amount);
-    }, [wholeWorkerCost]);
+        setFieldValue('wholeLaborCost', wholeLaborCost);
+    }, [wholeLaborCost]);
 
     return (
         <div className="container-fluid p-0 col-md-12">
@@ -84,8 +84,8 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
                         <div className="col-md">
                             <div className="form-floating">
                                 <fieldset className="form-group text-end">
-                                    <label htmlFor='workerNote'>:توضیحات</label>
-                                    <Field as="textarea" className='form-control text-end' name="workerNote"></Field>
+                                    <label htmlFor='laborNote'>:توضیحات</label>
+                                    <Field as="textarea" className='form-control text-end' name="laborNote"></Field>
                                 </fieldset>
                             </div>
                         </div>
@@ -100,8 +100,8 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
                         <div className="col-md">
                             <div className="form-floating">
                                 <fieldset className="form-group text-end">
-                                    <label htmlFor='workerName'>:کارگر</label>
-                                    <Field className='form-control text-end' type="text" name="workerName" />
+                                    <label htmlFor='laborName'>:کارگر</label>
+                                    <Field className='form-control text-end' type="text" name="laborName" />
                                 </fieldset>
                             </div>
                         </div>
@@ -111,16 +111,16 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
                             <div className="form-floating border-4 border border-success ms-2 mt-2 p-1 ">
                                 <fieldset className="form-group text-end">
                                     <label className='text-success' htmlFor='sellerName'>:مبلغ کل کارگری</label>
-                                    <h4 className="form-group text-center text-success">{commafy(wholeWorkerCost.amount)}</h4>
+                                    <h4 className="form-group text-center text-success">{commafy(wholeLaborCost.amount)}</h4>
                                 </fieldset>
                             </div>
                         </div>
                         <div className="col-md">
                             <div className="form-floating">
                                 <fieldset className="form-group text-end">
-                                    <label htmlFor='workerMiscCost'>:هزینه متفرقه</label>
-                                    {/* <Field className='form-control text-end' type="text" name="workerMiscCost" onKeyUp={calculateWholeWorkerCost} /> */}
-                                    <NumericField name="workerMiscCost" />
+                                    <label htmlFor='laborMiscCost'>:هزینه متفرقه</label>
+                                    {/* <Field className='form-control text-end' type="text" name="laborMiscCost" onKeyUp={calculateWholeLaborCost} /> */}
+                                    <NumericField name="laborMiscCost" />
                                 </fieldset>
                             </div>
                         </div>
@@ -128,7 +128,7 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
                             <div className="form-floating">
                                 <fieldset className="form-group text-end">
                                     <label htmlFor='tips'>:انعام</label>
-                                    {/* <Field className='form-control text-end' type="text" name="tips" onKeyUp={calculateWholeWorkerCost} /> */}
+                                    {/* <Field className='form-control text-end' type="text" name="tips" onKeyUp={calculateWholeLaborCost} /> */}
                                     <NumericField name="tips" />
                                 </fieldset>
                             </div>
@@ -137,7 +137,7 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
                             <div className="form-floating">
                                 <fieldset className="form-group text-end">
                                     <label htmlFor='housingCost'>:اسکان</label>
-                                    {/* <Field className='form-control text-end' type="text" name="housingCost" onKeyUp={calculateWholeWorkerCost} /> */}
+                                    {/* <Field className='form-control text-end' type="text" name="housingCost" onKeyUp={calculateWholeLaborCost} /> */}
                                     <NumericField name="housingCost" />
                                 </fieldset>
                             </div>
@@ -146,7 +146,7 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
                             <div className="form-floating">
                                 <fieldset className="form-group text-end">
                                     <label htmlFor='feedingCost'>:خوراک</label>
-                                    {/* <Field className='form-control text-end' type="text" name="feedingCost" onKeyUp={calculateWholeWorkerCost} /> */}
+                                    {/* <Field className='form-control text-end' type="text" name="feedingCost" onKeyUp={calculateWholeLaborCost} /> */}
                                     <NumericField name="feedingCost" />
                                 </fieldset>
                             </div>
@@ -163,7 +163,7 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
                             <div className="form-floating">
                                 <fieldset className="form-group text-end">
                                     <label htmlFor='wage'>{!values.byWeightUnit && ":فی قیمت"} {values.byWeightUnit && ": کل قیمت حمل"}</label>
-                                    {/* <Field className='form-control text-end' type="text" name="wage" onKeyUp={function (event) { calculateLoadingCost(); calculateWholeWorkerCost() }} /> */}
+                                    {/* <Field className='form-control text-end' type="text" name="wage" onKeyUp={function (event) { calculateLoadingCost(); calculateWholeLaborCost() }} /> */}
                                     <NumericField name="wage" />
                                 </fieldset>
                             </div>
@@ -175,4 +175,4 @@ const WorkerForm = ({ currency = 'IRR', weightUnit = 'ton' }: WorkerProps) => {
     );
 };
 
-export default WorkerForm;
+export default LaborForm;

@@ -1,5 +1,5 @@
 import type { Money, Weight } from '../types';
-import type { ShippingCostInput, WholeWorkerCostInput } from './pricing.types';
+import type { ShippingCostInput, WholeLaborCostInput } from './pricing.types';
 import { assertFullExceedsEmpty, assertSameWeightUnit } from './pricing.validators';
 
 
@@ -39,13 +39,13 @@ export function calculateShippingCost(
   };
 }
 
-export function calculateWholeWorkerCost(
-  input: WholeWorkerCostInput
+export function calculateWholeLaborCost(
+  input: WholeLaborCostInput
 ): Money {
   return {
     amount:
       input.wage.amount +
-      input.workerMiscCost.amount +
+      input.laborMiscCost.amount +
       input.tips.amount +
       input.housingCost.amount +
       input.feedingCost.amount,

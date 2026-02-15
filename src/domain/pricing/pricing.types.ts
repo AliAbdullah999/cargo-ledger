@@ -10,9 +10,9 @@ export type ShippingCostInput = {
   pricingMode: PricingMode;
 };
 
-export type WholeWorkerCostInput = {
+export type WholeLaborCostInput = {
   wage: Money;
-  workerMiscCost: Money;
+  laborMiscCost: Money;
   tips: Money;
   housingCost: Money;
   feedingCost: Money;
