@@ -1,3 +1,5 @@
+import type { Money } from "../../domain/types";
+
 
 export type InputRecordFormValues = {
     // Purchase
@@ -9,6 +11,7 @@ export type InputRecordFormValues = {
     sellerType: string;
     newProductType: string;
     newSellerType: string;
+    wholePurchaseValue: Money;
 
     // Transport
     driverName: string;
@@ -23,17 +26,23 @@ export type InputRecordFormValues = {
     payer: string;
     newPayer: string;
     transportNote: string;
+    wholeShippingCost: Money;
 
-    // worker
-    workerName: string;
-    workerType: string;
+    // Labor
+    laborName: string;
+    laborType: string;
     wage: number;
-    workerMiscCost: number;
+    laborMiscCost: number;
     tips: number;
     housingCost: number;
     feedingCost: number;
+    wholeLaborCost: Money;
 
-
+    // Sell
+    customerName: string;
+    customerType: string;
+    pulloutCost: number;
+    sellPrice: number;
 };
 
 export type PurchaseFormValues = Pick<
@@ -64,13 +73,21 @@ export type TransportFormValues = Pick<
   | 'transportNote'
 >;
 
-export type WorkerFormValues = Pick<
+export type LaborFormValues = Pick<
   InputRecordFormValues,
-  | 'workerName'
-  | 'workerType'
+  | 'laborName'
+  | 'laborType'
   | 'wage'
-  | 'workerMiscCost'
+  | 'laborMiscCost'
   | 'tips'
   | 'housingCost'
   | 'feedingCost'
+>;
+
+export type SellFormValues = Pick<
+  InputRecordFormValues,
+  | 'customerName'
+  | 'customerType'
+  | 'pulloutCost'
+  | 'sellPrice'
 >;

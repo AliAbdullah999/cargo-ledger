@@ -93,7 +93,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
 
     }, [values.fullWeight, values.emptyWeight, weightUnit]);
 
-    const wholeShippingCost = useMemo(() => {
+    const wholeShippingCost = useMemo<Money>(() => {
         const quantity = values.quantity;
 
         const shippMiscCost: Money = {
@@ -110,7 +110,6 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
             value: netWeight.value,
             unit: weightUnit,
         };
-
         return calculateShippingCost({
             quantity,
             net,
@@ -119,7 +118,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
             pricingMode: values.byWeightUnit
                 ? 'PER_WEIGHT'
                 : 'FLAT',
-        }).amount;
+        });
     }, [
         values.byWeightUnit,
         values.quantity,
@@ -128,9 +127,12 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
         netWeight,
     ]);
 
-
-
     // Effects 
+
+    useEffect(() => {
+        setFieldValue('wholeShippingCost', wholeShippingCost);
+    }, [wholeShippingCost, setFieldValue]);
+
 
     // Override netWeight when measured
     useEffect(() => {
@@ -193,7 +195,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
                         <fieldset className="form-group text-end">
                             <label>:وزن خالص</label>
                             <h4>
-                                {commafy(netWeight.value)} {weightUnit}
+                                {commafy(values.netWeight)} {weightUnit}
                             </h4>
 
                             {isMeasured && !hideNetWeightWarning && (
@@ -334,7 +336,7 @@ const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps)
                                 :کل کرایه حمل
                             </label>
                             <h4 className="text-success text-center">
-                                {commafy(wholeShippingCost)} {currency}
+                                {commafy(wholeShippingCost.amount)} {wholeShippingCost.currency}
                             </h4>
                         </fieldset>
                     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Field, useFormikContext } from 'formik';
 import type { Money, Weight, Currency, WeightUnit } from '../../domain/types';
 import { calculateWholePurchaseValue } from '../../domain/pricing/pricing.calculations';
@@ -16,14 +16,14 @@ function PurchaseForm({ currency = 'IRR', weightUnit = 'ton' }: PurchaseProps) {
     const { values, setFieldValue } = useFormikContext<InputRecordFormValues>();
 
     // State
-    const [productTypes, setProductTypes] = useState(['کلید', 'پوشالی', 'محلی']);
-    const [sellerTypes, setSellerTypes] = useState(['مرغداری', 'اقای', 'شرکت']);
+    const [productTypes, setProductTypes] = useState<string[]>(['کلید', 'پوشالی', 'محلی']);
+    const [sellerTypes, setSellerTypes] = useState<string[]>(['مرغداری', 'اقای', 'شرکت']);
 
     const [showAddProduct, setShowAddProduct] = useState(false);
     const [showAddSeller, setShowAddSeller] = useState(false);
 
     // Derived values
-    const wholePurchaseValue = useMemo(() => {
+    const wholePurchaseValue = useMemo<Money>(() => {
         const price: Money = {
             amount: values.purchaseValue,
             currency,
@@ -34,13 +34,21 @@ function PurchaseForm({ currency = 'IRR', weightUnit = 'ton' }: PurchaseProps) {
             unit: weightUnit,
         };
 
-        return calculateWholePurchaseValue(price, weight);
+        return {
+            amount: calculateWholePurchaseValue(price, weight),
+            currency: price.currency,
+        };
     }, [
         values.purchaseValue,
         values.netWeight,
         currency,
         weightUnit,
     ]);
+
+    // Sync calculated value to Formik state
+    useEffect(() => {
+        setFieldValue('wholePurchaseValue', wholePurchaseValue);
+    }, [wholePurchaseValue, setFieldValue]);
 
     // Handlers
     const handleAddProduct = () => {
@@ -125,7 +133,7 @@ function PurchaseForm({ currency = 'IRR', weightUnit = 'ton' }: PurchaseProps) {
                                     :مبلغ کل خرید
                                 </label>
                                 <h4 className="text-success text-center">
-                                    {commafy(wholePurchaseValue)} {currency}
+                                    {commafy(wholePurchaseValue.amount)} {currency}
                                 </h4>
                             </fieldset>
                         </div>
