@@ -1,4 +1,4 @@
-import { use, useEffect, useMemo, useState, } from 'react';
+import { useEffect, useMemo, useState, } from 'react';
 import type { Currency, Money, MoneyPerUnit, WeightUnit } from "../../domain/types"
 import type { InputRecordFormValues } from '../inputRecord/inputRecord.types';
 import { Field, useFormikContext } from 'formik';
