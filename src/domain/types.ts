@@ -16,3 +16,9 @@ export type ShipmentInput = {
   pricePerUnit: Money
   weight: Weight
 }
+
+export type MoneyPerUnit = {
+  amount: number
+  currency: Currency
+  unit: WeightUnit
+}
