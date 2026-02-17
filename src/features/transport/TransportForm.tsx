@@ -4,10 +4,9 @@ import NumericField from '../../shared/components/NumericField';
 import { commafy, addValueToArr, removeValueFromArr, } from '../../shared/utils/settings';
 import type { Currency, WeightUnit, Weight, Money } from '../../domain/types';
 import type { InputRecordFormValues } from '../inputRecord/inputRecord.types';
-import { calculateNetWeight } from '../../domain/pricing';
-import { calculateShippingCost } from '../../domain/pricing';
+import { calculateNetWeight, calculateShippingCost } from '../../domain/pricing';
 import { DomainValidationError } from '../../domain/domainErrors';
-import { FieldError } from '../../shared/components/FieldError'
+import { FieldError } from '../../shared/components/FieldError';
 
 type TransportProps = {
     currency: Currency;
@@ -15,359 +14,201 @@ type TransportProps = {
 };
 
 const TransportForm = ({ currency = 'IRR', weightUnit = 'ton' }: TransportProps) => {
-    const { values, setFieldValue, setErrors, errors } = useFormikContext<InputRecordFormValues>();
-    const { status, setStatus } = useFormikContext<InputRecordFormValues>();
+    const { values, setFieldValue, setErrors, errors, status, setStatus } = useFormikContext<InputRecordFormValues>();
 
-    const formik = useFormikContext<InputRecordFormValues>();
-
-    useEffect(() => {
-        console.log('Formik errors:', formik.errors);
-    }, [formik.errors]);
-
-
-    //  State
-
+    // State
     const [payers, setPayers] = useState(['فروشنده', 'خریدار', 'صندوق']);
     const [showAddPayer, setShowAddPayer] = useState(false);
     const [hideNetWeightWarning, setHideNetWeightWarning] = useState(false);
 
-    const isMeasured =
-        values.fullWeight > 0 &&
-        values.emptyWeight > 0 &&
-        values.fullWeight > values.emptyWeight;
+    const isMeasured = values.fullWeight > 0 && values.emptyWeight > 0 && values.fullWeight > values.emptyWeight;
 
-    // Event Handlers 
-
+    // Event Handlers
     const handleAddPayer = () => {
-        if (!showAddPayer) {
-            setShowAddPayer(true);
-            return;
-        }
-
-        if (!values.newPayer?.trim()) {
-            setShowAddPayer(false);
-            return;
-        }
-
-        setPayers((prev) =>
-            addValueToArr(prev, values.newPayer!)
-        );
-
+        if (!showAddPayer) { setShowAddPayer(true); return; }
+        if (!values.newPayer?.trim()) { setShowAddPayer(false); return; }
+        setPayers((prev) => addValueToArr(prev, values.newPayer!));
         setFieldValue('newPayerType', '');
         setFieldValue('addPayerVisible', false);
+        setShowAddPayer(false);
     };
 
     const handleDeletePayer = () => {
-        setPayers(
-            removeValueFromArr(payers, values.payer)
-        );
+        setPayers(removeValueFromArr(payers, values.payer));
     };
 
-    // Derived Values 
-
+    // Derived Values
     const netWeight = useMemo(() => {
-
-        const full: Weight = {
-            value: values.fullWeight,
-            unit: weightUnit,
-        };
-
-        const empty: Weight = {
-            value: values.emptyWeight,
-            unit: weightUnit,
-        };
-
+        const full: Weight = { value: values.fullWeight, unit: weightUnit };
+        const empty: Weight = { value: values.emptyWeight, unit: weightUnit };
         try {
-            console.log('net weight Calculated Succsefully');
-            return {
-                value: calculateNetWeight(full, empty).value,
-                error: null,
-            };
+            return { value: calculateNetWeight(full, empty).value, error: null };
         } catch (e) {
-            console.log('net weight error being returned');
-            return {
-                value: 0,
-                error: e instanceof Error ? e : null,
-            }
+            return { value: 0, error: e instanceof Error ? e : null };
         }
-
     }, [values.fullWeight, values.emptyWeight, weightUnit]);
 
     const wholeShippingCost = useMemo<Money>(() => {
-        const quantity = values.quantity;
-
-        const shippMiscCost: Money = {
-            amount: values.shippMiscCost,
-            currency,
-        };
-
-        const weighingFee: Money = {
-            amount: values.weighingFee,
-            currency,
-        };
-
-        const net: Weight = {
-            value: netWeight.value,
-            unit: weightUnit,
-        };
+        const net: Weight = { value: netWeight.value, unit: weightUnit };
         return calculateShippingCost({
-            quantity,
+            quantity: values.quantity,
             net,
-            weighingFee,
-            shippMiscCost,
-            pricingMode: values.byWeightUnit
-                ? 'PER_WEIGHT'
-                : 'FLAT',
+            weighingFee: { amount: values.weighingFee, currency },
+            shippMiscCost: { amount: values.shippMiscCost, currency },
+            pricingMode: values.byWeightUnit ? 'PER_WEIGHT' : 'FLAT',
         });
-    }, [
-        values.byWeightUnit,
-        values.quantity,
-        values.weighingFee,
-        values.shippMiscCost,
-        netWeight,
-    ]);
+    }, [values.byWeightUnit, values.quantity, values.weighingFee, values.shippMiscCost, netWeight, currency, weightUnit]);
 
-    // Effects 
+    // Effects
 
-    useEffect(() => {
-        setFieldValue('wholeShippingCost', wholeShippingCost);
-    }, [wholeShippingCost, setFieldValue]);
+    useEffect(() => { setFieldValue('wholeShippingCost', wholeShippingCost); }, [wholeShippingCost, setFieldValue]);
+    useEffect(() => { setFieldValue('netWeight', netWeight.value); }, [netWeight, setFieldValue]);
+    useEffect(() => { if (isMeasured) setHideNetWeightWarning(false); }, [values.fullWeight, values.emptyWeight, isMeasured]);
 
-
-    // Override netWeight when measured
-    useEffect(() => {
-        setFieldValue('netWeight', netWeight.value);
-    }, [netWeight, setFieldValue]);
-
-    // Reset warning visibility when measurement changes
-    useEffect(() => {
-        if (isMeasured) {
-            setHideNetWeightWarning(false);
-        }
-    }, [values.fullWeight, values.emptyWeight, isMeasured]);
-
-    // Show net Weight calculation error
-
-    // If net weight is valid, clear any related errors
     useEffect(() => {
         if (!netWeight.error) {
-            // Clear the error if it was previously set
             if (errors.fullWeight || errors.emptyWeight) {
                 const newErrors = { ...errors };
-                delete newErrors.fullWeight;
-                delete newErrors.emptyWeight;
+                delete newErrors.fullWeight; delete newErrors.emptyWeight;
                 setErrors(newErrors);
             }
             return;
         }
-
         if (netWeight.error instanceof DomainValidationError) {
-            console.log('Domain Validation Error', netWeight.error.message);
-            setErrors({
-                ...errors,
-                [netWeight.error.field]: netWeight.error.message
-            });
+            setErrors({ ...errors, [netWeight.error.field]: netWeight.error.message });
         } else {
-            console.log('Unexpected error calculating net weight');
             setStatus('Unexpected error calculating net weight');
         }
     }, [netWeight.error, errors, setErrors, setStatus]);
 
-
     return (
-        <div className="container-fluid p-0 col-md-12">
-            {/* Section Badge */}
-            <div className="col-md p-1 text-end">
-                <h1 className="fs-5 badge bg-info text-wrap">حمل</h1>
+        <div className="card shadow-sm border-0 mb-4 text-end" dir="rtl">
+            <div className="card-header bg-info text-white">
+                <h5 className="mb-0 py-1 fw-bold">جزئیات حمل و نقل</h5>
             </div>
 
-            {status && (
-                <div className="alert alert-danger text-end my-2">
-                    {status}
-                </div>
-            )}
+            <div className="card-body bg-body">
+                {status && <div className="alert alert-danger mb-3">{status}</div>}
 
-            <div className="col-md-13 border border-5 shadow-lg p-1 bg-body">
-                {/* --------------------------- First Row -------------------------------- */}
-                <div className="row text-start">
-                    {/* Net Weight */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>:وزن خالص</label>
-                            <h4>
-                                {commafy(values.netWeight)} {weightUnit}
-                            </h4>
-
-                            {isMeasured && !hideNetWeightWarning && (
-                                <div className="alert alert-warning d-flex justify-content-between align-items-center py-2 mt-2">
-                                    <span>
-                                        وزن خالص از وزن پر و خالی محاسبه شد و مقدار دستی جایگزین گردید
-                                    </span>
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        aria-label="Close"
-                                        onClick={() =>
-                                            setHideNetWeightWarning(true)
-                                        }
-                                    />
-                                </div>
-                            )}
-                        </fieldset>
-                    </div>
-
-                    {/* Empty Weight */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>{weightUnit} :وزن خالی</label>
-                            <NumericField name="emptyWeight" />
-                            <FieldError name="emptyWeight" />
-                        </fieldset>
-
-                    </div>
-
-                    {/* Full Weight */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>{weightUnit} :وزن پر</label>
+                {/* --- Row 1: Weight & Scale --- */}
+                <div className="row g-3 mb-4">
+                    <div className="col-md-3">
+                        <label className="form-label small fw-bold">وزن پر</label>
+                        <div className="input-group flex-row-reverse">
+                            <span className="input-group-text small bg-body">{weightUnit}</span>
                             <NumericField name="fullWeight" />
-                            <FieldError name="fullWeight" />
-                        </fieldset>
+                        </div>
+                        <FieldError name="fullWeight" />
                     </div>
 
-                    {/* Misc Cost */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>{currency} :هزینه متفرقه</label>
-                            <NumericField name="shippMiscCost" />
-                        </fieldset>
+                    <div className="col-md-3">
+                        <label className="form-label small fw-bold">وزن خالی</label>
+                        <div className="input-group flex-row-reverse">
+                            <span className="input-group-text small bg-body">{weightUnit}</span>
+                            <NumericField name="emptyWeight" />
+                        </div>
+                        <FieldError name="emptyWeight" />
                     </div>
 
-                    {/* Weighing Fee */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>{currency} :هزینه باسکول</label>
-                            <NumericField name="weighingFee" />
-                        </fieldset>
-                    </div>
-
-                    {/* Driver */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>:اسم راننده</label>
-                            <Field
-                                className="form-control text-end"
-                                name="driverName"
-                            />
-                        </fieldset>
-                    </div>
-
-                    {/* Vehicle */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>:شماره ماشین</label>
-                            <Field
-                                className="form-control text-end"
-                                name="vehicleNumber"
-                            />
-                        </fieldset>
+                    <div className="col-md-6">
+                        <div className="p-3 border rounded bg-body shadow-sm h-100 d-flex flex-column justify-content-center">
+                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                <label className="text-muted small fw-bold">وزن خالص محاسبه شده</label>
+                                {isMeasured && !hideNetWeightWarning && (
+                                    <span className="badge bg-warning text-body px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                                        محاسبه خودکار فعال
+                                        <button type="button" className="btn-close ms-1" style={{ fontSize: '0.5rem' }} onClick={() => setHideNetWeightWarning(true)} />
+                                    </span>
+                                )}
+                            </div>
+                            <h3 className="mb-0 fw-bold text-body">
+                                {commafy(values.netWeight)} <small className="fs-6 fw-normal text-muted">{weightUnit}</small>
+                            </h3>
+                        </div>
                     </div>
                 </div>
 
-                {/* --------------------------- Second Row ------------------------------- */}
-                <div className="row text-start">
-                    {/* Transport Note */}
-                    <div className="col-md">
-                        <fieldset className="form-group text-end">
-                            <label>:توضیحات</label>
-                            <Field
-                                as="textarea"
-                                className="form-control text-end"
-                                name="transportNote"
-                            />
-                        </fieldset>
+                {/* --- Row 2: Driver & Logistics --- */}
+                <div className="row g-3 mb-4">
+                    <div className="col-md-3">
+                        <label className="form-label small fw-bold">اسم راننده</label>
+                        <Field className="form-control text-end" name="driverName" placeholder="نام راننده..." />
+                    </div>
+                    <div className="col-md-3">
+                        <label className="form-label small fw-bold">شماره ماشین</label>
+                        <Field className="form-control text-end" name="vehicleNumber" placeholder="۱۲ب۳۴۵ / ایران۱۱" />
+                    </div>
+                    <div className="col-md-6">
+                        <label className="form-label small fw-bold">توضیحات حمل</label>
+                        <Field as="textarea" rows="1" className="form-control text-end" name="transportNote" />
+                    </div>
+                </div>
+
+                <hr className="my-4 opacity-25" />
+
+                {/* --- Row 3: Financials --- */}
+                <div className="row g-3 align-items-end">
+                    {/* Payment Mode */}
+                    <div className="col-md-2">
+                        <div className="form-check form-switch bg-body p-2 border rounded text-center d-flex flex-column align-items-center justify-content-center">
+                            <label className="form-check-label mb-2 small fw-bold">مبنای محاسبه</label>
+                            <div className="d-flex align-items-center">
+                                <span className={`small me-2 ${!values.byWeightUnit ? 'fw-bold text-primary' : 'text-muted'}`}>دربستی</span>
+                                <Field type="checkbox" className="form-check-input m-0" name="byWeightUnit" />
+                                <span className={`small ms-2 ${values.byWeightUnit ? 'fw-bold text-primary' : 'text-muted'}`}>وزنی</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Payer */}
                     <div className="col-md-2">
-                        <fieldset className="form-group text-end">
-                            <label>:پرداخت شد از</label>
-                            <Field
-                                as="select"
-                                className="form-control text-end"
-                                name="payer"
-                            >
-                                {payers.map((p) => (
-                                    <option key={p} value={p}>
-                                        {p}
-                                    </option>
-                                ))}
+                        <label className="form-label small fw-bold">{values.byWeightUnit ? 'تعداد/تناژ' : 'تعداد دربستی'}</label>
+                        <NumericField name="quantity" />
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="form-label small fw-bold">هزینه باسکول</label>
+                        <div className="input-group flex-row-reverse">
+                            <span className="input-group-text small bg-body">{currency}</span>
+                            <NumericField name="weighingFee" />
+                        </div>
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="form-label small fw-bold">هزینه متفرقه</label>
+                        <div className="input-group flex-row-reverse">
+                            <span className="input-group-text small bg-body">{currency}</span>
+                            <NumericField name="shippMiscCost" />
+                        </div>
+                    </div>
+
+                    {/* Payer Selection */}
+                    <div className="col-md-4">
+                        <label className="form-label small fw-bold">پرداخت شده از</label>
+                        <div className="input-group">
+                            <button type="button" className="btn btn-outline-danger btn-sm" onClick={handleDeletePayer} title="حذف">×</button>
+                            <button type="button" className="btn btn-outline-success btn-sm" onClick={handleAddPayer}>{showAddPayer ? 'تایید' : '+'}</button>
+                            <Field as="select" className="form-select text-end" name="payer">
+                                {payers.map((p) => <option key={p} value={p}>{p}</option>)}
                             </Field>
-
-                            <button
-                                className="btn btn-outline-danger btn-sm mx-2 my-1"
-                                onClick={handleDeletePayer}
-                            >
-                                حذف
-                            </button>
-                            <button
-                                className="btn btn-outline-success btn-sm"
-                                onClick={handleAddPayer}
-                            >
-                                افزایش
-                            </button>
-                        </fieldset>
-
+                        </div>
                         {showAddPayer && (
-                            <fieldset className="form-group text-end mt-2">
-                                <label>:اضافه به مقصد</label>
-                                <Field
-                                    className="form-control text-end"
-                                    name="newPayer"
-                                />
-                            </fieldset>
+                            <div className="mt-2">
+                                <Field className="form-control form-control-sm text-end border-success" name="newPayer" placeholder="منبع پرداخت جدید..." autoFocus />
+                            </div>
                         )}
                     </div>
+                </div>
 
-                    {/* Total Cost */}
-                    <div className="col-md-2">
-                        <fieldset className="form-group text-end border border-success mt-2 p-1">
-                            <label className="text-success">
-                                :کل کرایه حمل
-                            </label>
-                            <h4 className="text-success text-center">
-                                {commafy(wholeShippingCost.amount)} {wholeShippingCost.currency}
-                            </h4>
-                        </fieldset>
-                    </div>
-
-                    {/* Tons Count */}
-                    <div className="col-md-2">
-                        <fieldset className="form-group text-end">
-                            <label>
-                                {values.byWeightUnit
-                                    ? ':وزنى'
-                                    : ':دربستی'}
-                            </label>
-                            <NumericField name="quantity" />
-                        </fieldset>
-                    </div>
-
-                    {/* Payment Basis */}
-                    <div className="col-md-2">
-                        <fieldset className="form-group text-end">
-                            <label>:کرایه پرداختی</label>
-                            <div className="form-check form-switch">
-                                <Field
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    name="byWeightUnit"
-                                />
-                                <label className="form-check-label">
-                                    وزنى
-                                </label>
-                            </div>
-                        </fieldset>
+                {/* --- Row 4: Shipping Summary --- */}
+                <div className="row mt-4">
+                    <div className="col-12">
+                        <div className="p-4 border border-success border-2 rounded-3 bg-body text-center shadow-sm">
+                            <label className="text-success fw-bold d-block mb-1">کل کرایه حمل</label>
+                            <h2 className="mb-0 fw-bold text-success">
+                                {commafy(wholeShippingCost.amount)} 
+                                <span className="fs-5 fw-normal ms-2 text-muted">{wholeShippingCost.currency}</span>
+                            </h2>
+                        </div>
                     </div>
                 </div>
             </div>
