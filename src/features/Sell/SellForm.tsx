@@ -134,7 +134,7 @@ const SellForm = ({ currency = 'IRR', weightUnit = 'ton' }: SellProps) => {
                         <div className="p-2 border rounded bg-body text-center h-100 d-flex flex-column justify-content-center border-info">
                             <span className="text-info x-small d-block mb-1">فی تمام شده (واحد)</span>
                             <span className="fw-bold text-info">
-                                {isNaN(finalCostPerweightUnit.amount) ? '0' : commafy(finalCostPerweightUnit.amount.toFixed(0))} 
+                                {isNaN(finalCostPerweightUnit.amount) ? '0' : commafy(finalCostPerweightUnit.amount)} 
                                 <small className="fw-normal fs-6">{finalCostPerweightUnit.currency} / {finalCostPerweightUnit.unit}</small>
                             </span>
                         </div>
@@ -169,7 +169,7 @@ const SellForm = ({ currency = 'IRR', weightUnit = 'ton' }: SellProps) => {
                                 <div className="col-md-5 text-center">
                                     <label className="text-success fw-bold d-block mb-1 small">سود در واحد وزن</label>
                                     <h4 className="mb-0 fw-bold text-success">
-                                        {isNaN(netProfitPerWeightUnit.amount) ? '0' : commafy(netProfitPerWeightUnit.amount.toFixed(2))}
+                                        {isNaN(netProfitPerWeightUnit.amount) ? '0' : commafy(netProfitPerWeightUnit.amount)}
                                         <small className="fs-6 fw-normal text-muted">{netProfitPerWeightUnit.currency} / {netProfitPerWeightUnit.unit}</small>
                                     </h4>
                                 </div>
